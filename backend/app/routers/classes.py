@@ -108,3 +108,91 @@ def get_classes_as_student(
 
     result.sort(key=lambda x: x['class_id'], reverse=True)
     return result
+
+@router.get("/class/{class_id}/teacher")
+def get_class_details_as_teacher(class_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if not current_user.is_teacher:
+        raise HTTPException(status_code=403, detail="Bu işlemi yalnızca öğretmenler gerçekleştirebilir")
+
+    class_details = db.query(Class).filter(Class.id == class_id).first()
+    
+    if not class_details:
+        raise HTTPException(status_code=404, detail="Sınıf bulunamadı")
+    
+    if class_details.teacher_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Bu sınıfın öğretmeni değilsiniz")
+
+    students_with_progress = []
+    for student in class_details.students:
+        student_task = db.query(StudentTask).filter(StudentTask.user_id == student.id, StudentTask.class_id == class_id).first()
+        
+        progress_percentage = student_task.completion_percentage if student_task else 0
+
+        students_with_progress.append({
+            "id": student.id,
+            "student_name": f"{student.first_name} {student.last_name}",
+            "code": student_task.code,
+            "summary": student_task.code_summary,
+            "progress_percentage": progress_percentage,
+        })
+
+    return {
+        "class_name": class_details.class_name,
+        "university_name": class_details.university_name,
+        "invite_code": class_details.invite_code,
+        "task_description": class_details.task_description,
+        "task_language": class_details.task_language,
+        "students": students_with_progress
+    }
+
+@router.get("/class/{class_id}")
+@router.get("/class/{class_id}/{student_id}")
+def get_class_student_info(
+    class_id: int,
+    student_id: int = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user.is_teacher:
+        student_id = current_user.id
+    elif current_user.is_teacher and student_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Öğretmenler için öğrenci ID'si belirtilmelidir."
+        )
+
+    class_info = db.query(Class).filter(Class.id == class_id).first()
+    if not class_info:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sınıf bulunamadı.")
+
+    if current_user.is_teacher and (class_info.teacher_id != current_user.id):
+        raise HTTPException(status_code=403, detail="Bu sınıfın öğretmeni değilsiniz")
+    
+    student_task = db.query(StudentTask).filter(
+        StudentTask.user_id == student_id,
+        StudentTask.class_id == class_id
+    ).first()
+
+    if not student_task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Öğrenciye ait görev bulunamadı.")
+
+    teacher_info = db.query(User).filter(User.id == class_info.teacher_id).first()
+    if not teacher_info:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Öğretmen bulunamadı.")
+
+    return {
+        "class_info": {
+            "class_id": class_info.id,
+            "class_name": class_info.class_name,
+            "university_name": class_info.university_name,
+            "teacher_name": f"{teacher_info.first_name} {teacher_info.last_name}",
+            "task_description": class_info.task_description,
+            "task_language": class_info.task_language,
+        },
+        "student_task": {
+            "id": student_task.user_id,
+            "student_name": f"{student_task.user.first_name} {student_task.user.last_name}",
+            "code": student_task.code,
+            "progress_percentage": student_task.completion_percentage
+        }
+    }
