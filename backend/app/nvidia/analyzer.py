@@ -34,7 +34,7 @@ llm = ChatOpenAI(
     max_tokens=8192,
     model_kwargs={"response_format": {"type": "json_object"}},
     default_headers={
-        "Authorization": "Bearer senin-key-in"
+        "Authorization": f"Bearer {os.getenv('BREVLAB_API_KEY')}"
     }
 )
 

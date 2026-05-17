@@ -35,7 +35,7 @@ llm = ChatOpenAI(
     temperature=1.0,
     max_tokens=8192,
     default_headers={
-        "Authorization": "Bearer senin-key-in"
+        "Authorization": f"Bearer {os.getenv('BREVLAB_API_KEY')}"
     }
 )
 

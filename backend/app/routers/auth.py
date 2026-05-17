@@ -78,10 +78,10 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         "message": "Giriş başarılı",
         "is_teacher": db_user.is_teacher
     })
-    response.set_cookie(key="access_token", value=access_token, httponly=True, domain="yusufacmaci.com", max_age=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")))
+    response.set_cookie(key="access_token", value=access_token, httponly=True, samesite="lax", max_age=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")))
     
     if db_user.is_teacher:
-        response.set_cookie(key="socket_key", value=db_user.socket_key, domain="yusufacmaci.com", max_age=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")))
+        response.set_cookie(key="socket_key", value=db_user.socket_key, samesite="lax", max_age=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")))
     return response
 
 
