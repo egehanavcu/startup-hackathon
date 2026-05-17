@@ -19,7 +19,7 @@ SYSTEM_PROMPT = (
     "şekilde hazırlanmış olmalıdır. "
     "Tüm yanıtlarını BBCode etiketleri kullanarak biçimlendirmelisin. "
     "Kalın metin için [b]...[/b], italik için [i]...[/i], altı çizili için [u]...[/u], "
-    "liste için [list][*]...[/list] etiketlerini kullan. "
+    "liste için [list][*]...[/list] etiketlerini kullan, kod için [code]...[/code] etiketlerini kullan."
     "KESİNLİKLE Markdown formatı kullanma: **kalın**, *italik*, # başlık gibi ifadeler YASAKTIR. "
     "Yalnızca ve yalnızca BBCode etiketleri kullan. "
     "Örnek: 'Ders Adı' yerine [b]Ders Adı[/b] şeklinde yaz. "
@@ -30,12 +30,12 @@ SYSTEM_PROMPT = (
 llm = ChatOpenAI(
     base_url = "https://api-i5aa4vm7t.brevlab.com/v1",
     model="qwen3-coder",
-    api_key = "",
+    api_key = "aaa",
     openai_api_key=os.getenv("OPENROUTER_API_KEY"),
     temperature=1.0,
     max_tokens=8192,
     default_headers={
-        "Authorization": "Bearer test"
+        "Authorization": "Bearer senin-key-in"
     }
 )
 
