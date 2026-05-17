@@ -196,3 +196,21 @@ def get_class_student_info(
             "progress_percentage": student_task.completion_percentage
         }
     }
+
+@router.post("/class/{class_id}/edit")
+def update_class(class_id: int, class_data: ClassBase, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    if not current_user.is_teacher:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Sadece öğretmenler değiştirebilir")
+
+    class_to_update = db.query(Class).filter(Class.id == class_id).first()
+    if not class_to_update:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sınıf bulunamadı")
+    
+    if class_to_update.teacher_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Bu sınıfın öğretmeni değilsiniz")
+    
+    class_to_update.class_name = class_data.class_name
+    class_to_update.university_name = class_data.university_name
+    db.commit()
+    db.refresh(class_to_update)
+    return {"message": "Sınıf bilgileri başarıyla düzenlendi", "class_id": class_to_update.id}
