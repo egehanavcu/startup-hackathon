@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+python-dotenv
+langchain-core
+langchain-openai
+pydantic[email]
+python-socketio
+bcrypt
+python-jose[cryptography]
