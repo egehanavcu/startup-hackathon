@@ -60,3 +60,51 @@ def join_class(request: JoinClassRequest, db: Session = Depends(get_db), current
     db.commit()
     
     return {"message": "Sınıfa başarıyla katıldın ve görev oluşturuldu"}
+
+@router.get("/class/all/teacher")
+def get_classes_as_teacher(
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user.is_teacher:
+        raise HTTPException(status_code=403, detail="Bu işlemi yapma yetkiniz yok")
+
+    classes = db.query(Class).filter(Class.teacher_id == current_user.id).order_by(Class.id.desc()).all()
+    
+    result = []
+    for cls in classes:
+        student_count = len(cls.students)
+        result.append({
+            "class_id": cls.id,
+            "class_name": cls.class_name,
+            "university_name": cls.university_name,
+            "invite_code": cls.invite_code,
+            "student_count": student_count
+        })
+    
+    return result
+
+@router.get("/class/all/student")
+def get_classes_as_student(
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.is_teacher:
+        raise HTTPException(status_code=403, detail="Bu işlemi yapma yetkiniz yok")
+
+    classes = current_user.classes
+    result = []
+    for cls in classes:
+        student_count = len(cls.students)
+        teacher_name = f"{cls.teacher.first_name} {cls.teacher.last_name}"
+
+        result.append({
+            "class_id": cls.id,
+            "class_name": cls.class_name,
+            "university_name": cls.university_name,
+            "teacher_name": teacher_name,
+            "student_count": student_count
+        })
+
+    result.sort(key=lambda x: x['class_id'], reverse=True)
+    return result
